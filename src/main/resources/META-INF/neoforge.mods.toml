@@ -1,0 +1,17 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+#issueTrackerURL = ""
+license = "MIT"
+
+[[mods]]
+modId = "dimban"
+version = "${version}"
+displayName = "DimBan"
+authors = "Kall"
+description = '''
+A Minecraft mod
+'''
+#logoFile = ""
+
+[[mixins]]
+config = "dimban.mixins.json"

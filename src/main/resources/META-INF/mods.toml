@@ -1,0 +1,13 @@
+modLoader = "javafml"
+loaderVersion = "[36,)"
+#issueTrackerURL = ""
+license = "MIT"
+
+[[mods]]
+modId = "dimban"
+version = "${version}"
+displayName = "DimBan"
+authors = "Kall"
+description = '''
+'''
+#logoFile = ""
