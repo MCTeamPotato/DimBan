@@ -12,16 +12,18 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,12 +34,12 @@ public final class DimBan {
     public static final String MOD_ID = "dimban";
     public static final String MOD_NAME = "DimBan";
 
-    public DimBan(@NotNull FMLJavaModLoadingContext context) {
-        context.registerConfig(ModConfig.Type.COMMON, CONFIG);
-        context.getModEventBus().addListener(this::onConfigReload);
-        MinecraftForge.EVENT_BUS.addListener(this::onChangeDim);
-        MinecraftForge.EVENT_BUS.addListener(this::onServerStarting);
-        MinecraftForge.EVENT_BUS.addListener(this::onJoin);
+    public DimBan(IEventBus modEventBus, Dist dist, ModContainer container) {
+        container.registerConfig(ModConfig.Type.COMMON, CONFIG);
+        modEventBus.addListener(this::onConfigReload);
+        NeoForge.EVENT_BUS.addListener(this::onChangeDim);
+        NeoForge.EVENT_BUS.addListener(this::onServerStarting);
+        NeoForge.EVENT_BUS.addListener(this::onJoin);
     }
 
     public void onJoin(PlayerEvent.PlayerLoggedInEvent event) {
@@ -68,12 +70,12 @@ public final class DimBan {
         }
     }
 
-    public static final ForgeConfigSpec CONFIG;
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> DIMENSIONS;
-    public static final ForgeConfigSpec.ConfigValue<? extends String> WHERE_TO_GO;
+    public static final ModConfigSpec CONFIG;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> DIMENSIONS;
+    public static final ModConfigSpec.ConfigValue<? extends String> WHERE_TO_GO;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push(MOD_NAME);
         DIMENSIONS = builder.defineList("DimensionsToBan", Lists.newArrayList(), Predicates.alwaysTrue());
         WHERE_TO_GO = builder.comment("Where will the player go if their current dimension is banned.").define("WhereToGo", "minecraft:overworld");
