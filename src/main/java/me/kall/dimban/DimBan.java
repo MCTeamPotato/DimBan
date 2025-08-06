@@ -8,6 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -16,13 +18,12 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,8 +43,14 @@ public final class DimBan {
     }
 
     public void onJoin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player && player.level instanceof ServerLevel level && ((IServerLevel) level).dimBan$isBlacklisted()) {
-            updatePlayer(level.getServer(), player);
+        Player player = event.getPlayer();
+        Level level = player.level;
+        if (player instanceof ServerPlayer && level instanceof ServerLevel) {
+            ServerLevel serverLevel = (ServerLevel) level;
+            ServerPlayer serverPlayer = (ServerPlayer) player;
+            if (((IServerLevel)serverLevel).dimBan$isBlacklisted()) {
+                updatePlayer(serverLevel.getServer(), serverPlayer);
+            }
         }
     }
 
@@ -56,11 +63,11 @@ public final class DimBan {
         }
     }
 
-    public void onServerStarting(@NotNull ServerStartingEvent event) {
+    public void onServerStarting(@NotNull FMLServerStartingEvent event) {
         event.getServer().getAllLevels().forEach(serverLevel -> ((IServerLevel) serverLevel).dimBan$setBlacklisted(DIMENSIONS.get().contains(serverLevel.dimension().location().toString())));
     }
 
-    public void onConfigReload(ModConfigEvent.@NotNull Reloading event) {
+    public void onConfigReload(ModConfig.Reloading event) {
         if (event.getConfig().getModId().equals(MOD_ID)) {
             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
             if (server != null) {
@@ -93,7 +100,7 @@ public final class DimBan {
                 int z = startZ + dz;
 
                 int topY = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
-                for (int y = topY; y >= level.getMinBuildHeight(); y--) {
+                for (int y = topY; y >= 0; y--) {
                     pos.set(x, y, z);
                     if (isSafeForPlayer(level, pos)) return pos.immutable();
                 }
@@ -115,7 +122,7 @@ public final class DimBan {
     }
 
     public static void updatePlayer(@NotNull MinecraftServer server, List<ServerPlayer> players) {
-        ResourceLocation toGo = ResourceLocation.parse(DimBan.WHERE_TO_GO.get());
+        ResourceLocation toGo = ResourceLocation.tryParse(DimBan.WHERE_TO_GO.get());
         ServerLevel destination = null;
         for (ServerLevel level : server.getAllLevels()) {
             if (!level.dimension().location().equals(toGo)) continue;
@@ -133,12 +140,12 @@ public final class DimBan {
         }
 
         for (ServerPlayer player : players) {
-            player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.getYRot(), player.getXRot());
+            player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.yRot, player.xRot);
         }
     }
 
     public static void updatePlayer(@NotNull MinecraftServer server, ServerPlayer player) {
-        ResourceLocation toGo = ResourceLocation.parse(DimBan.WHERE_TO_GO.get());
+        ResourceLocation toGo = ResourceLocation.tryParse(DimBan.WHERE_TO_GO.get());
         ServerLevel destination = null;
         for (ServerLevel level : server.getAllLevels()) {
             if (!level.dimension().location().equals(toGo)) continue;
@@ -155,6 +162,6 @@ public final class DimBan {
             chunkX++;
         }
 
-        player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.getYRot(), player.getXRot());
+        player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.yRot, player.xRot);
     }
 }

@@ -18,7 +18,7 @@ import java.util.List;
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelMixin implements IServerLevel {
     @Shadow @Final private MinecraftServer server;
-    @Shadow @Final List<ServerPlayer> players;
+    @Shadow @Final private List<ServerPlayer> players;
     @Unique private boolean dimBan$isBlacklistedDim;
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
