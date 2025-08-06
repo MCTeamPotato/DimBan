@@ -41,7 +41,7 @@ public final class DimBan {
     }
 
     public void onJoin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player && player.level() instanceof ServerLevel level && ((IServerLevel) level).dimBan$isBlacklisted()) {
+        if (event.getEntity() instanceof ServerPlayer player && player.level instanceof ServerLevel level && ((IServerLevel) level).dimBan$isBlacklisted()) {
             updatePlayer(level.getServer(), player);
         }
     }
