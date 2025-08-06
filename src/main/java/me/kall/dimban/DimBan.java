@@ -17,6 +17,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
@@ -32,9 +33,9 @@ public final class DimBan {
     public static final String MOD_ID = "dimban";
     public static final String MOD_NAME = "DimBan";
 
-    public DimBan(@NotNull FMLJavaModLoadingContext context) {
-        context.registerConfig(ModConfig.Type.COMMON, CONFIG);
-        context.getModEventBus().addListener(this::onConfigReload);
+    public DimBan() {
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CONFIG);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onConfigReload);
         MinecraftForge.EVENT_BUS.addListener(this::onChangeDim);
         MinecraftForge.EVENT_BUS.addListener(this::onServerStarting);
         MinecraftForge.EVENT_BUS.addListener(this::onJoin);
