@@ -115,7 +115,7 @@ public final class DimBan {
         return solidGround && spaceClear;
     }
 
-    public static void updatePlayer(@NotNull MinecraftServer server, List<ServerPlayer> players) {
+    private static @NotNull ServerLevel findDestination(@NotNull MinecraftServer server) {
         ResourceLocation toGo = ResourceLocation.parse(DimBan.WHERE_TO_GO.get());
         ServerLevel destination = null;
         for (ServerLevel level : server.getAllLevels()) {
@@ -125,37 +125,30 @@ public final class DimBan {
 
         }
         if (destination == null) throw new NullPointerException("Invalid dimension: " + toGo);
+        return destination;
+    }
 
+    private static BlockPos findSafePos(ServerLevel destination) {
         BlockPos safePos = null;
         int chunkX = 0;
         while (safePos == null) {
             safePos = DimBan.findSafeTeleportPos(destination, destination.getChunk(chunkX, 0));
             chunkX++;
         }
+        return safePos;
+    }
 
+    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull List<ServerPlayer> players) {
+        ServerLevel destination = findDestination(server);
+        BlockPos safePos = findSafePos(destination);
         for (ServerPlayer player : players) {
             player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.getYRot(), player.getXRot());
         }
     }
 
-    public static void updatePlayer(@NotNull MinecraftServer server, ServerPlayer player) {
-        ResourceLocation toGo = ResourceLocation.parse(DimBan.WHERE_TO_GO.get());
-        ServerLevel destination = null;
-        for (ServerLevel level : server.getAllLevels()) {
-            if (!level.dimension().location().equals(toGo)) continue;
-            destination = level;
-            break;
-
-        }
-        if (destination == null) throw new NullPointerException("Invalid dimension: " + toGo);
-
-        BlockPos safePos = null;
-        int chunkX = 0;
-        while (safePos == null) {
-            safePos = DimBan.findSafeTeleportPos(destination, destination.getChunk(chunkX, 0));
-            chunkX++;
-        }
-
+    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull ServerPlayer player) {
+        ServerLevel destination = findDestination(server);
+        BlockPos safePos = findSafePos(destination);
         player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.getYRot(), player.getXRot());
     }
 }
