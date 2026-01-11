@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mixin(ServerLevel.class)
 public abstract class ServerLevelMixin implements IServerLevel {
@@ -24,10 +25,7 @@ public abstract class ServerLevelMixin implements IServerLevel {
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void onTick(CallbackInfo ci) {
         if (this.dimBan$isBlacklisted()) {
-            if (!this.players.isEmpty()) {
-                DimBan.updatePlayer(this.server, this.players);
-                this.players.clear();
-            }
+            if (!this.players.isEmpty()) DimBan.updatePlayer(this.server, this.players.stream().map(ServerPlayer::getUUID).collect(Collectors.toList()));
             ci.cancel();
         }
     }
