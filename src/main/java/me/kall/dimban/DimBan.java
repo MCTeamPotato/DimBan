@@ -27,7 +27,9 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Mod(DimBan.MOD_ID)
 public final class DimBan {
@@ -42,9 +44,9 @@ public final class DimBan {
         NeoForge.EVENT_BUS.addListener(this::onJoin);
     }
 
-    public void onJoin(PlayerEvent.PlayerLoggedInEvent event) {
+    public void onJoin(PlayerEvent.@NotNull PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player && player.level() instanceof ServerLevel level && ((IServerLevel) level).dimBan$isBlacklisted()) {
-            updatePlayer(level.getServer(), player);
+            updatePlayer(level.getServer(), player.getUUID());
         }
     }
 
@@ -138,17 +140,20 @@ public final class DimBan {
         return safePos;
     }
 
-    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull List<ServerPlayer> players) {
+    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull Collection<UUID> players) {
         ServerLevel destination = findDestination(server);
         BlockPos safePos = findSafePos(destination);
-        for (ServerPlayer player : players) {
-            player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.getYRot(), player.getXRot());
-        }
+        players.forEach(id -> {
+            ServerPlayer player = server.getPlayerList().getPlayer(id);
+            if (player != null) player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.getYRot(), player.getXRot());
+        });
     }
 
-    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull ServerPlayer player) {
+    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull UUID id) {
         ServerLevel destination = findDestination(server);
         BlockPos safePos = findSafePos(destination);
+        ServerPlayer player = server.getPlayerList().getPlayer(id);
+        if (player == null) return;
         player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.getYRot(), player.getXRot());
     }
 }
