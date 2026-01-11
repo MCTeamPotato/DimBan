@@ -27,7 +27,9 @@ import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Mod(DimBan.MOD_ID)
 public final class DimBan {
@@ -49,7 +51,7 @@ public final class DimBan {
             ServerLevel serverLevel = (ServerLevel) level;
             ServerPlayer serverPlayer = (ServerPlayer) player;
             if (((IServerLevel)serverLevel).dimBan$isBlacklisted()) {
-                updatePlayer(serverLevel.getServer(), serverPlayer);
+                updatePlayer(serverLevel.getServer(), serverPlayer.getUUID());
             }
         }
     }
@@ -112,11 +114,9 @@ public final class DimBan {
 
     private static boolean isSafeForPlayer(@NotNull LevelAccessor level, @NotNull BlockPos pos) {
         BlockState below = level.getBlockState(pos.below());
-        BlockState at = level.getBlockState(pos);
-        BlockState above = level.getBlockState(pos.above());
 
         boolean solidGround = below.isCollisionShapeFullBlock(level, pos.below());
-        boolean spaceClear = at.isAir() && above.isAir();
+        boolean spaceClear = level.isEmptyBlock(pos) && level.isEmptyBlock(pos.above());
 
         return solidGround && spaceClear;
     }
@@ -128,7 +128,6 @@ public final class DimBan {
             if (!level.dimension().location().equals(toGo)) continue;
             destination = level;
             break;
-
         }
         if (destination == null) throw new NullPointerException("Invalid dimension: " + toGo);
         return destination;
@@ -144,17 +143,20 @@ public final class DimBan {
         return safePos;
     }
 
-    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull List<ServerPlayer> players) {
+    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull Collection<UUID> players) {
         ServerLevel destination = findDestination(server);
         BlockPos safePos = findSafePos(destination);
-        for (ServerPlayer player : players) {
-            player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.yRot, player.xRot);
-        }
+        players.forEach(id -> {
+            ServerPlayer player = server.getPlayerList().getPlayer(id);
+            if (player != null) player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.yRot, player.xRot);
+        });
     }
 
-    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull ServerPlayer player) {
+    public static void updatePlayer(@NotNull MinecraftServer server, @NotNull UUID id) {
         ServerLevel destination = findDestination(server);
         BlockPos safePos = findSafePos(destination);
+        ServerPlayer player = server.getPlayerList().getPlayer(id);
+        if (player == null) return;
         player.teleportTo(destination, safePos.getX(), safePos.getY(), safePos.getZ(), player.yRot, player.xRot);
     }
 }
